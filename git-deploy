@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+if test $# -eq 0; then
+    echo Must specify beta or release deployment >&2
+    exit 1
+elif test $# -gt 1; then
+    echo Unexpected argument >&2
+    exit 2
+elif test "$1" != beta -a "$1" != release; then
+    echo Unrecognized deployment >&2
+    exit 3
+elif ! git rev-parse HEAD &>/dev/null; then
+    echo Cannot find HEAD >&2
+    exit 10
+elif test $(git status --porcelain 2>/dev/null | wc -l) -gt 0; then
+    echo Working tree is not clean >&2
+    exit 11
+fi
+
+declare tag="$1"
+
+git tag -fa -m "moving tag to deploy $tag" $tag
+git push -f origin $tag
+
+echo pushed $tag deployment tag
